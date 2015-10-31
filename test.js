@@ -1,4 +1,4 @@
-var steiner = require('./stei.js').appx_steiner;
+var steiner = require('./steiner.js').appx_steiner;
 
 var successes = 0;
 var failures = 0;
