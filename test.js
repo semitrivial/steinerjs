@@ -60,4 +60,9 @@ edges = [[1,2,1],[2,3,1]];
 reqds = [1];
 test(nodes,edges,reqds,[]);
 
+nodes = [1,2,3,4,5,6,7];
+edges = [[1,2,1],[6,7,1],[1,3,99],[3,4,99],[4,5,99],[5,6,99]];
+reqds = [1,2,6,7];
+test(nodes,edges,reqds,[[1,2,1],[6,7,1],[5,6,99],[4,5,99],[3,4,99],[1,3,99]]);
+
 console.log( "Successes: " + successes + ", failures: " + failures );

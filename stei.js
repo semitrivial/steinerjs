@@ -1,4 +1,5 @@
 var create_new_fifo = require('fifo');
+var connect = require('./connect.js').connect
 
 function steiner(nodes, edges, required) {
   var xnodes = [];
@@ -23,8 +24,11 @@ function steiner(nodes, edges, required) {
       node: n,
       reqd: reqd,
       outgoing: [],
+      incoming: [],
       in_permanent_web: false,
       in_temporary_web: false,
+      in_solution: false,
+      in_first_component: false,
       witness: null,
       fifo: []
     };
@@ -41,10 +45,13 @@ function steiner(nodes, edges, required) {
     var xedge = {
       from: get_xnode(e[0]),
       to: get_xnode(e[1]),
-      weight: e[2]
+      weight: e[2],
+      in_solution: false,
+      in_first_component: false
     };
     xedges.push(xedge);
     xedge.from.outgoing.push(xedge);
+    xedge.to.incoming.push(xedge);
   });
 
   function uniqueify(es) {
@@ -139,6 +146,8 @@ function steiner(nodes, edges, required) {
     if ( !fNonemptyFifo )
       break;
   }
+
+  soln = connect(soln, xedges, xnodes);
 
   return uniqueify(soln).map(function(e) {
     return [e.from.node, e.to.node, e.weight];
