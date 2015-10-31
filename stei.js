@@ -47,6 +47,18 @@ function steiner(nodes, edges, required) {
     xedge.from.outgoing.push(xedge);
   });
 
+  function uniqueify(es) {
+    var retval = [];
+    es.forEach(function(e) {
+      for(var j=0; j<retval.length; j++) {
+        if (retval[j].from===e.from && retval[j].to===e.to)
+          return;
+      }
+      retval.push(e);
+    });
+    return retval;
+  }
+
   var solved_reqds = 0;
   var soln = [];
 
@@ -60,17 +72,6 @@ function steiner(nodes, edges, required) {
   function map_soln(x) {
     return x.map(function(e) {
       return JSON.stringify([e.from.node, e.to.node, e.weight]);
-    });
-  }
-
-  function dewitness(n) {
-console.log("Dewitness called on "+n.node);
-    xnodes.forEach(function(m) {
-      if ( m.witness !== null && m.witness.node === n ) {
-console.log("Dewitnessing "+m.node);
-        m.witness = null;
-        m.in_temporary_web = false;
-      }
     });
   }
 
@@ -94,45 +95,37 @@ console.log("Dewitnessing "+m.node);
         }
         var p = ppath.point;
         var path = ppath.path;
+        p.in_temporary_web = true;
+        p.witness = {node: n, path:path};
         var j;
         for ( j=0; j<p.outgoing.length; j++ ) {
           var outgoing = p.outgoing[j];
           var to = outgoing.to;
           if ( (to.reqd && to !== n) || to.in_permanent_web ) {
-console.log("Debug1: Adding " + map_soln(path.concat([outgoing])));
             soln = soln.concat(path).concat([outgoing]);
             path.forEach(function(step) {
               step.from.in_permanent_web = true;
             });
             to.in_permanent_web = true;
-            dewitness(n);
-            if ( to.reqd ) {
-              dewitness(to);
+            if ( !to.in_permanent_web ) {
               solved_reqds += 2;
-            }
-            else
+            } else {
               solved_reqds++;
+            }
             break;
           }
           if ( to.in_temporary_web ) {
             if ( to.witness.node === n )
               continue;
             new_edges = path.concat(to.witness.path).concat([outgoing]);
-console.log("Debug2: Adding " + map_soln(new_edges));
-console.log("n="+n.node);
-console.log("to="+to.node);
             soln = soln.concat(new_edges);
             new_edges.forEach(function(step) {
               step.from.in_permanent_web = true;
             });
             to.in_permanent_web = true;
-            dewitness(to.witness.node);
-            dewitness(n);
             solved_reqds += 2;
             break;
           }
-          to.in_temporary_web = true;
-          to.witness = {node: n, path:path.concat([outgoing])};
           new_path = path.concat([outgoing]);
           new_ppath = {point:to, path:new_path, endweight:outgoing.weight};
           n.fifo.push(new_ppath);
@@ -147,7 +140,7 @@ console.log("to="+to.node);
       break;
   }
 
-  return soln.map(function(e) {
+  return uniqueify(soln).map(function(e) {
     return [e.from.node, e.to.node, e.weight];
   });
 }
