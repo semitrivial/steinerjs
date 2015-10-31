@@ -1,6 +1,17 @@
 var create_new_fifo = require('fifo');
 var connect = require('./connect.js').connect
 
+/*
+ * Input:
+ *  nodes: an array of nodes (a node can be anything)
+ *  edges: an array of edges.  Each edge should be an object
+ *         with 'from', 'to', and 'weight' fields, where 'from'
+ *         and 'to' are nodes and 'weight' is a positive integer.
+ *         Additional metadata (e.g. species) can be stored in
+ *         other fields.
+ *  required: an array of 'required' nodes (must be a subset of
+ *            the above-mentioned array of nodes).
+ */
 function steiner(nodes, edges, required) {
   var xnodes = [];
   var xedges = [];
@@ -43,9 +54,10 @@ function steiner(nodes, edges, required) {
 
   edges.forEach(function(e) {
     var xedge = {
-      from: get_xnode(e[0]),
-      to: get_xnode(e[1]),
-      weight: e[2],
+      edge: e,
+      from: get_xnode(e.from),
+      to: get_xnode(e.to),
+      weight: e.weight,
       in_solution: false,
       in_first_component: false
     };
@@ -150,7 +162,7 @@ function steiner(nodes, edges, required) {
   soln = connect(soln, xedges, xnodes);
 
   return uniqueify(soln).map(function(e) {
-    return [e.from.node, e.to.node, e.weight];
+    return e.edge;
   });
 }
 

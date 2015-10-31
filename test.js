@@ -14,8 +14,15 @@ function test(a,b,c,expected) {
 //  console.log("Nodes: " + a );
 //  console.log("Edges: " + JSON.stringify(b) );
 //  console.log("Required nodes: " + c );
+  b = b.map(function(e) {
+    return {from:e[0], to:e[1], weight:e[2]};
+  });
   var expected = JSON.stringify(expected);
-  var got = JSON.stringify(steiner(a,b,c));
+  var result = steiner(a,b,c);
+  result = result.map(function(e) {
+    return [e.from, e.to, e.weight];
+  });
+  var got = JSON.stringify(result);
   console.log("Expected:");
   console.log(expected);
   console.log("Got:");
