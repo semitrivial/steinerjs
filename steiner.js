@@ -103,6 +103,8 @@ function steiner(nodes, edges, required) {
    * the paths needed to reach them, along with an "end-
    * weight" which forces an edge of weight W to go through
    * the queue W times.
+   *
+   * Note: ppath stands for "pointed path"
    */
   xnodes.forEach(function(n) {
     if ( !n.reqd ) return;
@@ -163,6 +165,13 @@ function steiner(nodes, edges, required) {
         var p = ppath.point;
         var path = ppath.path;
 
+        /*
+         * If temporary path from required node n meets required
+         * node m (either directly, or by meeting a permanent path
+         * spawned by m) then it solves n.  If the meeting was
+         * direct, and m was not previously solved, then the path
+         * solves m too.
+         */
         if ( (p.reqd && p!==n) || p.in_permanent_web ) {
           soln = soln.concat(path);
           path.forEach(function(step) {
@@ -176,7 +185,18 @@ function steiner(nodes, edges, required) {
           }
           continue;
         }
+        /*
+         * If a temporary path from required node n
+         * indirectly meets required node m by meeting
+         * a temporary path spawned by m, then the
+         * union of the two temporary paths solves both
+         * n and m.
+         */
         if ( p.in_temporary_web ) {
+          /*
+           * ...unless n=m in which case then the temporary
+           * path has collided with itself: stop growing it.
+           */
           if ( p.witness.node === n ) continue;
           new_edges = path.concat(p.witness.path);
           soln = soln.concat(new_edges);
