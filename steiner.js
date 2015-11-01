@@ -45,7 +45,7 @@ function steiner(nodes, edges, required) {
       in_solution: false,
       in_first_component: false,
       witness: null,
-      fifo: []
+      fifo: null
     };
     xnodes.push(xnode);
   });
