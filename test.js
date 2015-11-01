@@ -10,10 +10,6 @@ function reverse_edges(edges) {
 }
 
 function test(a,b,c,expected) {
-//  console.log("Testing...");
-//  console.log("Nodes: " + a );
-//  console.log("Edges: " + JSON.stringify(b) );
-//  console.log("Required nodes: " + c );
   b = b.map(function(e) {
     return {from:e[0], to:e[1], weight:e[2]};
   });
@@ -23,13 +19,20 @@ function test(a,b,c,expected) {
     return [e.from, e.to, e.weight];
   });
   var got = JSON.stringify(result);
-  console.log("Expected:");
-  console.log(expected);
-  console.log("Got:");
-  console.log(got);
 
-  if ( expected === got ) successes++;
-  else failures++;
+  if ( expected !== got ) {
+    console.log("FAILURE on the following input");
+    console.log("-------------");
+    console.log("Nodes: "+JSON.stringify(a));
+    console.log("Edges: "+JSON.stringify(b));
+    console.log("Required Nodes: "+JSON.stringify(c));
+    console.log("-------------");
+    console.log("Expected output: "+expected);
+    console.log("Actual output: "+got);
+    console.log("-------------");
+    failures++;
+  }
+  else successes++;
 }
 
 var nodes = [1,2,3];
@@ -49,13 +52,19 @@ nodes = [1,2,3,4,5,6,7,8,9];
 edges = [[1,2,1],[2,3,1],[3,4,1],[4,5,1],[5,6,1],[1,7,50],[7,6,50],[8,2,1],[2,9,1]];
 edges = edges.concat(reverse_edges(edges));
 reqds = [1,6,8,9];
-test(nodes, edges, reqds, [[1,2,1],[2,9,1],[8,2,1],[6,5,1],[5,4,1],[4,3,1],[3,2,1]]);
+test(nodes, edges, reqds, [[8,2,1],[1,2,1],[9,2,1],[6,5,1],[5,4,1],[4,3,1],[3,2,1]]);
 
 nodes = [1,2,3,4,5,6,7,8,9];
 edges = [[1,2,1],[2,3,1],[3,4,1],[4,5,1],[5,6,1],[1,7,2],[7,6,2],[8,2,1],[2,9,1]];
 edges = edges.concat(reverse_edges(edges));
 reqds = [1,6,8,9];
-test(nodes, edges, reqds, [[1,2,1],[2,9,1],[8,2,1],[6,7,2],[7,1,2]]);
+test(nodes, edges, reqds, [[8,2,1],[1,2,1],[9,2,1],[6,5,1],[5,4,1],[4,3,1],[3,2,1]]);
+
+nodes = [1,2,3,4,5,6,7,8,9];
+edges = [[1,2,1],[2,3,1],[3,4,1],[4,5,1],[5,6,1],[1,7,2],[7,6,1],[8,2,1],[2,9,1]];
+edges = edges.concat(reverse_edges(edges));
+reqds = [1,6,8,9];
+test(nodes, edges, reqds, [[8,2,1],[1,2,1],[9,2,1],[6,7,1],[7,1,2]]);
 
 nodes = [1];
 edges = [];

@@ -151,7 +151,9 @@ function steiner(nodes, edges, required) {
         var ppath = n.fifo.shift();
         /*
          * Edges with weight W are required to go through
-         * the queue W times before processing
+         * the queue W times before they get acknowledged
+         *
+         * Note: ppath stands for "pointed path"
          */
         if ( ppath.endweight > 1 ) {
           ppath.endweight--;
@@ -160,69 +162,40 @@ function steiner(nodes, edges, required) {
         }
         var p = ppath.point;
         var path = ppath.path;
-        /*
-         * As each required node carries on its search, it
-         * leaves "temporary paths" behind it.  If another
-         * node runs into one of these temporary paths, the
-         * two temporary paths will be merged and the nodes
-         * will be solved by them.
-         */
+
+        if ( (p.reqd && p!==n) || p.in_permanent_web ) {
+          soln = soln.concat(path);
+          path.forEach(function(step) {
+            step.from.in_permanent_web = true;
+          });
+          if ( p.in_permanent_web )
+            solved_reqds++;
+          else {
+            p.in_permanent_web = true;
+            solved_reqds += 2;
+          }
+          continue;
+        }
+        if ( p.in_temporary_web ) {
+          if ( p.witness.node === n ) continue;
+          new_edges = path.concat(p.witness.path);
+          soln = soln.concat(new_edges);
+          new_edges.forEach(function(step) {
+            step.from.in_permanent_web = true;
+          });
+          p.in_permanent_web = true;
+          solved_reqds += 2;
+          break;
+        }
         p.in_temporary_web = true;
         p.witness = {node: n, path:path};
         var j;
         for ( j=0; j<p.outgoing.length; j++ ) {
-          /*
-           * From a given point in the graph, continue
-           * the search: consider all possible next steps,
-           * if any of them would solve the node then do
-           * that, otherwise push all those possible next
-           * steps into the queue
-           */
           var outgoing = p.outgoing[j];
-          var to = outgoing.to;
-          if ( (to.reqd && to !== n) || to.in_permanent_web ) {
-            /*
-             * If a possible step takes us to a fellow required
-             * vertex---or to the "permanent path" which solved
-             * said vertex---then the path which led there solves
-             * both.
-             */
-            soln = soln.concat(path).concat([outgoing]);
-            path.forEach(function(step) {
-              step.from.in_permanent_web = true;
-            });
-            to.in_permanent_web = true;
-            if ( !to.in_permanent_web ) {
-              solved_reqds += 2;
-            } else {
-              solved_reqds++;
-            }
-            break;
-          }
-          if ( to.in_temporary_web ) {
-            /*
-             * If a possible step takes us to a path which is
-             * one of the paths a fellow required vertex has
-             * already searched, then both vertices are solved
-             * by the union of the two paths
-             */
-            if ( to.witness.node === n )
-              continue;
-            new_edges = path.concat(to.witness.path).concat([outgoing]);
-            soln = soln.concat(new_edges);
-            new_edges.forEach(function(step) {
-              step.from.in_permanent_web = true;
-            });
-            to.in_permanent_web = true;
-            solved_reqds += 2;
-            break;
-          }
           new_path = path.concat([outgoing]);
-          new_ppath = {point:to, path:new_path, endweight:outgoing.weight};
+          new_ppath = {point:outgoing.to, path:new_path, endweight:outgoing.weight};
           n.fifo.push(new_ppath);
         }
-        if ( j<p.outgoing.length )
-          break;
       }
       if ( !fNonemptyFifo || i < xnodes.length )
         break;
